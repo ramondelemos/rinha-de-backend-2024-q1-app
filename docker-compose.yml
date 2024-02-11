@@ -1,0 +1,11 @@
+version: "3"
+
+services:
+  postgres:
+    image: postgres:16.1-alpine
+    environment:
+      - POSTGRES_USER=rinhabackend-user
+      - POSTGRES_PASSWORD=rinhabackend-pass
+      - POSTGRES_DB=rinhabackend
+    ports:
+      - 5432:5432
