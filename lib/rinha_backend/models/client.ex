@@ -3,6 +3,8 @@ defmodule RinhaBackend.Models.Client do
 
   use Ecto.Schema
 
+  @type t :: %__MODULE__{}
+
   @primary_key false
   schema "clients" do
     field(:id, :integer, primary_key: true)

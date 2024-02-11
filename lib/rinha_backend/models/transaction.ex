@@ -5,6 +5,8 @@ defmodule RinhaBackend.Models.Transaction do
 
   import Ecto.Changeset
 
+  @type t :: %__MODULE__{}
+
   @transaction_types ["c", "d"]
 
   @primary_key false
