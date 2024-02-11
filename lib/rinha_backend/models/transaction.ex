@@ -1,0 +1,46 @@
+defmodule RinhaBackend.Models.Transaction do
+  @moduledoc false
+
+  use Ecto.Schema
+
+  import Ecto.Changeset
+
+  @transaction_types ["c", "d"]
+
+  @primary_key false
+  schema "transactions" do
+    field(:client_id, :integer)
+    field(:type, :string)
+    field(:value, :integer)
+    field(:description, :string)
+  end
+
+  @spec changeset(Ecto.Schema.t() | Ecto.Changeset.t() | {data :: map(), types :: map()}, map()) ::
+          Ecto.Changeset.t()
+  def changeset(schema \\ %__MODULE__{}, params) do
+    fields = __schema__(:fields)
+
+    schema
+    |> cast(params, fields)
+    |> validate_required(fields)
+    |> validate_number(:value, greater_than_or_equal_to: 1)
+    |> validate_length(:description, min: 1, max: 10)
+    |> sanatize_type()
+    |> validate_inclusion(:type, @transaction_types)
+  end
+
+  defp sanatize_type(changeset) do
+    case changeset do
+      %Ecto.Changeset{valid?: true} ->
+        value =
+          changeset
+          |> get_field(:type)
+          |> String.downcase()
+
+        put_change(changeset, :type, value)
+
+      _ ->
+        changeset
+    end
+  end
+end
