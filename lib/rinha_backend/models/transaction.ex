@@ -35,6 +35,43 @@ defmodule RinhaBackend.Models.Transaction do
     |> validate_inclusion(:type, @transaction_types)
   end
 
+  def from_map(params) do
+    params
+    |> changeset()
+    |> case do
+      %Ecto.Changeset{valid?: true} = changes ->
+        {:ok, Ecto.Changeset.apply_changes(changes)}
+
+      %Ecto.Changeset{
+        errors: [client_id: {"is invalid", [type: :integer, validation: :cast]}]
+      } ->
+        {:error, "invalid client id"}
+
+      %Ecto.Changeset{
+        errors: [
+          value:
+            {"must be greater than or equal to %{number}",
+             [validation: :number, kind: :greater_than_or_equal_to, number: number]}
+        ]
+      } ->
+        {:error, "value must be greater than or equal to #{number}"}
+
+      %Ecto.Changeset{
+        errors: [description: {"can't be blank", [validation: :required]}]
+      } ->
+        {:error, "description can't be blank"}
+
+      %Ecto.Changeset{
+        errors: [
+          description:
+            {"should be at most %{count} character(s)",
+             [count: 10, validation: :length, kind: :max, type: :string]}
+        ]
+      } ->
+        {:error, "description should be at most 10 characters"}
+    end
+  end
+
   defp sanatize_type(changeset) do
     case changeset do
       %Ecto.Changeset{valid?: true} ->

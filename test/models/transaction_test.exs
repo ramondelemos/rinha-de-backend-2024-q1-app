@@ -12,89 +12,61 @@ defmodule RinhaBackend.Models.TransactionTest do
     "description" => "bonus"
   }
 
-  describe "changeset/2" do
+  describe "from_map/1" do
     test "should return a valid changeset when all fields are correct" do
-      changeset = Transaction.changeset(@valid_params)
-
-      assert changeset.valid? == true
+      assert {:ok,
+              %RinhaBackend.Models.Transaction{
+                client_id: 1,
+                type: "c",
+                value: 1,
+                description: "bonus",
+                inserted_at: nil
+              }} = Transaction.from_map(@valid_params)
     end
 
     test "should return a valid changeset when client_id field are not an number" do
-      changeset =
-        @valid_params
-        |> Map.replace("client_id", "a")
-        |> Transaction.changeset()
-
-      assert %Ecto.Changeset{
-               errors: [client_id: {"is invalid", [type: :integer, validation: :cast]}],
-               valid?: false
-             } = changeset
+      assert @valid_params
+             |> Map.replace("client_id", "a")
+             |> Transaction.from_map() == {:error, "invalid client id"}
     end
 
     test "should return a valid changeset when type field are in upper case" do
-      changeset =
+      transaction =
         @valid_params
         |> Map.replace("type", "C")
-        |> Transaction.changeset()
 
-      assert changeset.valid? == true
-      assert changeset.changes.type == "c"
+      assert {:ok,
+              %RinhaBackend.Models.Transaction{
+                client_id: 1,
+                type: "c",
+                value: 1,
+                description: "bonus",
+                inserted_at: nil
+              }} = Transaction.from_map(transaction)
     end
 
     test "should return a invalid changeset when value is less then 1" do
-      changeset =
-        @valid_params
-        |> Map.replace("value", -1)
-        |> Transaction.changeset()
-
-      assert %Ecto.Changeset{
-               errors: [
-                 value:
-                   {"must be greater than or equal to %{number}",
-                    [validation: :number, kind: :greater_than_or_equal_to, number: 1]}
-               ],
-               valid?: false
-             } = changeset
+      assert @valid_params
+             |> Map.replace("value", -1)
+             |> Transaction.from_map() == {:error, "value must be greater than or equal to 1"}
     end
 
     test "should return a invalid changeset when description is blank" do
-      changeset =
-        @valid_params
-        |> Map.replace("description", nil)
-        |> Transaction.changeset()
-
-      assert %Ecto.Changeset{
-               errors: [description: {"can't be blank", [validation: :required]}],
-               valid?: false
-             } = changeset
+      assert @valid_params
+             |> Map.replace("description", nil)
+             |> Transaction.from_map() == {:error, "description can't be blank"}
     end
 
     test "should return a invalid changeset when description is an empty string" do
-      changeset =
-        @valid_params
-        |> Map.replace("description", "")
-        |> Transaction.changeset()
-
-      assert %Ecto.Changeset{
-               errors: [description: {"can't be blank", [validation: :required]}],
-               valid?: false
-             } = changeset
+      assert @valid_params
+             |> Map.replace("description", "")
+             |> Transaction.from_map() == {:error, "description can't be blank"}
     end
 
     test "should return a invalid changeset when description length is greater than 10" do
-      changeset =
-        @valid_params
-        |> Map.replace("description", "description")
-        |> Transaction.changeset()
-
-      assert %Ecto.Changeset{
-               errors: [
-                 description:
-                   {"should be at most %{count} character(s)",
-                    [count: 10, validation: :length, kind: :max, type: :string]}
-               ],
-               valid?: false
-             } = changeset
+      assert @valid_params
+             |> Map.replace("description", "description")
+             |> Transaction.from_map() == {:error, "description should be at most 10 characters"}
     end
   end
 end

@@ -27,7 +27,7 @@ defmodule RinhaBackend.Commands.GenerateStatementTest do
         description: "description"
       }
 
-      assert {:ok, 1} == ProcessTransaction.execute(transaction)
+      assert {:ok, {1, 100_000}} == ProcessTransaction.execute(transaction)
 
       assert {:ok, %Client{balance: 1} = client} = GenerateStatement.execute(1)
       assert Enum.count(client.transactions) == 1
@@ -42,7 +42,7 @@ defmodule RinhaBackend.Commands.GenerateStatementTest do
       }
 
       Enum.each(1..11, fn balance ->
-        assert {:ok, ^balance} = ProcessTransaction.execute(transaction)
+        assert {:ok, {^balance, 100_000}} = ProcessTransaction.execute(transaction)
       end)
 
       assert {:ok, %Client{balance: 11} = client} = GenerateStatement.execute(1)

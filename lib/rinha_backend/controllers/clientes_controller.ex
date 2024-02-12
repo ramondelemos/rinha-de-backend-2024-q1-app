@@ -2,7 +2,8 @@ defmodule RinhaBackend.Controllers.ClientsController do
   @moduledoc false
 
   alias RinhaBackend.Commands.{
-    GenerateStatement
+    GenerateStatement,
+    ProcessTransaction
   }
 
   alias RinhaBackend.Models.{
@@ -10,12 +11,52 @@ defmodule RinhaBackend.Controllers.ClientsController do
     Transaction
   }
 
+  def create_transaction(id, params) do
+    params
+    |> translate_transaction_body()
+    |> Map.put("client_id", id)
+    |> Transaction.from_map()
+    |> case do
+      {:ok, transaction} -> do_create_transaction(transaction)
+      error -> error
+    end
+  end
+
   def get_statement(id) do
     id
     |> GenerateStatement.execute()
     |> case do
       {:ok, %Client{} = client} ->
         build_statement(client)
+
+      {:error, :client_not_found} ->
+        {:error, :not_found}
+
+      error ->
+        error
+    end
+  end
+
+  defp translate_transaction_body(body) do
+    Enum.reduce(body, %{}, fn
+      {"valor", val}, acc ->
+        Map.put(acc, "value", val)
+
+      {"tipo", val}, acc ->
+        Map.put(acc, "type", val)
+
+      {"descricao", val}, acc ->
+        Map.put(acc, "description", val)
+
+      {key, val}, acc ->
+        Map.put(acc, key, val)
+    end)
+  end
+
+  defp do_create_transaction(transaction) do
+    case ProcessTransaction.execute(transaction) do
+      {:ok, {balance, limit}} ->
+        Jason.encode(%{"saldo" => balance, "limite" => limit})
 
       {:error, :client_not_found} ->
         {:error, :not_found}

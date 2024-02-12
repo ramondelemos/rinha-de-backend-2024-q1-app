@@ -11,7 +11,7 @@ defmodule RinhaBackend.Commands.ProcessTransactionTest do
 
   describe "execute/1" do
     test "should process transaction with success when executend with a valid transaction" do
-      %Client{balance: balance} = Repo.get(Client, 1)
+      %Client{balance: balance, credit_limit: limit} = Repo.get(Client, 1)
 
       description = UUID.generate()
 
@@ -22,7 +22,7 @@ defmodule RinhaBackend.Commands.ProcessTransactionTest do
         description: description
       }
 
-      assert ProcessTransaction.execute(transaction) == {:ok, balance + 1}
+      assert ProcessTransaction.execute(transaction) == {:ok, {balance + 1, limit}}
 
       assert %Transaction{
                client_id: 1,

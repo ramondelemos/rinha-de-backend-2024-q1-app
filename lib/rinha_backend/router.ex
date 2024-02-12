@@ -30,7 +30,22 @@ defmodule RinhaBackend.Router do
   end
 
   post "/clientes/:id/transacoes" do
-    send_resp(conn, 200, "transacoes")
+    id = conn.params["id"]
+    params = conn.body_params
+
+    case ClientsController.create_transaction(id, params) do
+      {:ok, result} ->
+        send_resp(conn, 200, result)
+
+      {:error, :not_enough_funds} ->
+        send_resp(conn, 422, "not enough funds")
+
+      {:error, :not_found} ->
+        send_resp(conn, 404, "not found")
+
+      {:error, reason} ->
+        send_resp(conn, 400, inspect(reason))
+    end
   end
 
   match _ do
