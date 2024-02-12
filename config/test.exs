@@ -3,9 +3,8 @@ import Config
 config :rinha_backend, ecto_repos: [RinhaBackend.Repo]
 
 config :rinha_backend, RinhaBackend.Repo,
-  database: "rinhabackend",
+  database: "rinhabackend_test",
   username: "rinhabackend-user",
   password: "rinhabackend-pass",
-  hostname: "localhost"
-
-import_config "#{config_env()}.exs"
+  hostname: "localhost",
+  pool: Ecto.Adapters.SQL.Sandbox

@@ -9,12 +9,16 @@ defmodule RinhaBackend.Models.Transaction do
 
   @transaction_types ["c", "d"]
 
+  @optional_fields [:inserted_at]
+
   @primary_key false
   schema "transactions" do
     field(:client_id, :integer)
     field(:type, :string)
     field(:value, :integer)
     field(:description, :string)
+
+    timestamps(updated_at: false)
   end
 
   @spec changeset(Ecto.Schema.t() | Ecto.Changeset.t() | {data :: map(), types :: map()}, map()) ::
@@ -24,7 +28,7 @@ defmodule RinhaBackend.Models.Transaction do
 
     schema
     |> cast(params, fields)
-    |> validate_required(fields)
+    |> validate_required(fields -- @optional_fields)
     |> validate_number(:value, greater_than_or_equal_to: 1)
     |> validate_length(:description, min: 1, max: 10)
     |> sanatize_type()

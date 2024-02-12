@@ -1,5 +1,5 @@
 defmodule RinhaBackend.Commands.ProcessTransactionTest do
-  use ExUnit.Case
+  use RinhaBackend.RepoCase
 
   doctest RinhaBackend
 

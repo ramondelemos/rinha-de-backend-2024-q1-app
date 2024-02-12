@@ -3,6 +3,8 @@ defmodule RinhaBackend.Models.Client do
 
   use Ecto.Schema
 
+  alias RinhaBackend.Models.Transaction
+
   @type t :: %__MODULE__{}
 
   @primary_key false
@@ -10,5 +12,7 @@ defmodule RinhaBackend.Models.Client do
     field(:id, :integer, primary_key: true)
     field(:credit_limit, :integer)
     field(:balance, :integer, default: 0)
+
+    has_many(:transactions, Transaction, references: :id)
   end
 end

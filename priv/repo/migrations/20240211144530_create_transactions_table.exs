@@ -7,6 +7,10 @@ defmodule RinhaBackend.Repo.Migrations.CreateTransactionsTable do
       add :value, :bigint
       add :type, :string
       add :description, :string
+
+      timestamps(type: :naive_datetime_usec, updated_at: false)
     end
+
+    create(index(:transactions, :client_id))
   end
 end
