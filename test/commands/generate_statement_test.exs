@@ -49,8 +49,12 @@ defmodule RinhaBackend.Commands.GenerateStatementTest do
       assert Enum.count(client.transactions) == 10
     end
 
-    test "should return that client not_found with invalid client id" do
+    test "should return that client not_found with nonexistent client id" do
       assert {:error, :client_not_found} = GenerateStatement.execute(6)
+    end
+
+    test "should return that client not_found with invalid client id" do
+      assert {:error, :invalid_client_id} = GenerateStatement.execute("b")
     end
   end
 end

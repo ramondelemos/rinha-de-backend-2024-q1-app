@@ -2,6 +2,8 @@ defmodule RinhaBackend.Router do
   use Plug.Router
   use Plug.ErrorHandler
 
+  alias RinhaBackend.Controllers.ClientsController
+
   plug(:match)
 
   plug(Plug.Parsers,
@@ -14,7 +16,17 @@ defmodule RinhaBackend.Router do
 
   get "/clientes/:id/extrato" do
     id = conn.params["id"]
-    send_resp(conn, 200, "extrato from #{id}")
+
+    case ClientsController.get_statement(id) do
+      {:ok, statement} ->
+        send_resp(conn, 200, statement)
+
+      {:error, :not_found} ->
+        send_resp(conn, 404, "not found")
+
+      {:error, :invalid_client_id} ->
+        send_resp(conn, 400, "invalid client id")
+    end
   end
 
   post "/clientes/:id/transacoes" do
@@ -22,7 +34,7 @@ defmodule RinhaBackend.Router do
   end
 
   match _ do
-    send_resp(conn, 404, "oops")
+    send_resp(conn, 404, "not found")
   end
 
   defp handle_errors(conn, %{kind: _kind, reason: _reason, stack: _stack}) do
