@@ -8,7 +8,8 @@ defmodule RinhaBackend.Application do
   @impl true
   def start(_type, _args) do
     children = [
-      RinhaBackend.Repo
+      RinhaBackend.Repo,
+      {Plug.Cowboy, scheme: :http, plug: RinhaBackend.Router, options: [port: 4001]}
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html

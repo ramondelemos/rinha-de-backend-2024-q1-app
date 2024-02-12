@@ -28,6 +28,9 @@ defmodule RinhaBackend.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
+      {:plug, "~> 1.14"},
+      {:plug_cowboy, "~> 2.7"},
+      {:jason, "~> 1.4"},
       {:ecto_sql, "~> 3.0"},
       {:postgrex, ">= 0.0.0"}
     ]
