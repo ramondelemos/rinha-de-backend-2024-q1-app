@@ -1,10 +1,8 @@
 defmodule RinhaBackend.Controllers.ClientsController do
   @moduledoc false
 
-  alias RinhaBackend.Commands.{
-    GenerateStatement,
-    ProcessTransaction
-  }
+  alias RinhaBackend.BackPressure.TransactionsDispatcher
+  alias RinhaBackend.Commands.GenerateStatement
 
   alias RinhaBackend.Models.{
     Client,
@@ -54,7 +52,7 @@ defmodule RinhaBackend.Controllers.ClientsController do
   end
 
   defp do_create_transaction(transaction) do
-    case ProcessTransaction.execute(transaction) do
+    case TransactionsDispatcher.dispatch(transaction) do
       {:ok, {balance, limit}} ->
         Jason.encode(%{"saldo" => balance, "limite" => limit})
 

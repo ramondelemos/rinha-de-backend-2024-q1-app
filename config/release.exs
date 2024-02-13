@@ -30,3 +30,7 @@ config :rinha_backend, RinhaBackend.ReadRepo,
   pool_size: fetch_integer!.("READ_DATABASE_POOL_SIZE")
 
 config :rinha_backend, RinhaBackend.Commands.GenerateStatement, repo: RinhaBackend.ReadRepo
+
+config :rinha_backend, :back_pressure,
+  timeout: fetch_integer!.("BACK_PRESSURE_TIMEOUT"),
+  max_demand: fetch_integer!.("BACK_PRESSURE_MAX_CONCURRENCY")
