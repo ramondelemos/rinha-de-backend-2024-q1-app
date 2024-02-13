@@ -9,8 +9,6 @@ defmodule RinhaBackend.Application do
 
   @impl true
   def start(_type, _args) do
-    :ets.new(:client_producers, [:public, :named_table])
-
     if execute_migrations?() do
       migrate()
     end
@@ -18,6 +16,7 @@ defmodule RinhaBackend.Application do
     children = [
       RinhaBackend.Repo,
       RinhaBackend.ReadRepo,
+      RinhaBackend.ClientsCache,
       {Registry, keys: :unique, name: RinhaBackend.BackPressure.TransactionsProducerRegistry},
       {RinhaBackend.BackPressure.Supervisor, []},
       {Plug.Cowboy, scheme: :http, plug: RinhaBackend.Router, options: [port: 4001]}

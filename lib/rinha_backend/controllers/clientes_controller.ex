@@ -2,6 +2,7 @@ defmodule RinhaBackend.Controllers.ClientsController do
   @moduledoc false
 
   alias RinhaBackend.BackPressure.TransactionsDispatcher
+  alias RinhaBackend.ClientsCache
   alias RinhaBackend.Commands.GenerateStatement
 
   alias RinhaBackend.Models.{
@@ -51,7 +52,17 @@ defmodule RinhaBackend.Controllers.ClientsController do
     end)
   end
 
-  defp do_create_transaction(transaction) do
+  defp do_create_transaction(%Transaction{client_id: client_id} = transaction) do
+    case ClientsCache.get_client(client_id) do
+      nil ->
+        {:error, :client_not_found}
+
+      %Client{} ->
+        dispatch_transaction(transaction)
+    end
+  end
+
+  defp dispatch_transaction(transaction) do
     case TransactionsDispatcher.dispatch(transaction) do
       {:ok, {balance, limit}} ->
         Jason.encode(%{"saldo" => balance, "limite" => limit})

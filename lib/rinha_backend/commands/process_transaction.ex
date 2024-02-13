@@ -1,6 +1,7 @@
 defmodule RinhaBackend.Commands.ProcessTransaction do
   @moduledoc false
 
+  alias RinhaBackend.ClientsCache
   alias RinhaBackend.Repo
 
   alias RinhaBackend.Models.{
@@ -13,7 +14,7 @@ defmodule RinhaBackend.Commands.ProcessTransaction do
           client_id: client_id
         } = transaction
       ) do
-    case Repo.get(Client, client_id) do
+    case ClientsCache.get_client(client_id) do
       nil ->
         {:error, :client_not_found}
 
