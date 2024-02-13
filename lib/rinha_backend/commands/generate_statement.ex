@@ -6,9 +6,9 @@ defmodule RinhaBackend.Commands.GenerateStatement do
     Transaction
   }
 
-  alias RinhaBackend.Repo
-
   import Ecto.Query
+
+  @app :rinha_backend
 
   def execute(client_id) do
     case sanitize_client_id(client_id) do
@@ -34,7 +34,7 @@ defmodule RinhaBackend.Commands.GenerateStatement do
         preload: [transactions: ^transactions_query]
       )
 
-    case Repo.one(query) do
+    case repo().one(query) do
       nil -> {:error, :client_not_found}
       client -> {:ok, client}
     end
@@ -47,5 +47,11 @@ defmodule RinhaBackend.Commands.GenerateStatement do
       {id, _} -> {:ok, id}
       :error -> {:error, :invalid_client_id}
     end
+  end
+
+  defp repo do
+    @app
+    |> Application.fetch_env!(__MODULE__)
+    |> Keyword.fetch!(:repo)
   end
 end

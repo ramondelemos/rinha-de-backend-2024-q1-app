@@ -44,7 +44,7 @@ defmodule RinhaBackend.Router do
         send_resp(conn, 404, "not found")
 
       {:error, reason} ->
-        send_resp(conn, 400, inspect(reason))
+        send_resp(conn, 422, inspect(reason))
     end
   end
 

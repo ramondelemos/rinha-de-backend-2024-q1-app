@@ -18,4 +18,15 @@ config :rinha_backend, RinhaBackend.Repo,
   password: fetch_env!("DATABASE_PASSWORD"),
   database: fetch_env!("DATABASE_NAME"),
   hostname: fetch_env!("DATABASE_HOST"),
-  port: fetch_integer!.("DATABASE_PORT")
+  port: fetch_integer!.("DATABASE_PORT"),
+  pool_size: fetch_integer!.("DATABASE_POOL_SIZE")
+
+config :rinha_backend, RinhaBackend.ReadRepo,
+  username: fetch_env!("DATABASE_USER"),
+  password: fetch_env!("DATABASE_PASSWORD"),
+  database: fetch_env!("DATABASE_NAME"),
+  hostname: fetch_env!("DATABASE_HOST"),
+  port: fetch_integer!.("DATABASE_PORT"),
+  pool_size: fetch_integer!.("READ_DATABASE_POOL_SIZE")
+
+config :rinha_backend, RinhaBackend.Commands.GenerateStatement, repo: RinhaBackend.ReadRepo

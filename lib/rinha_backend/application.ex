@@ -15,6 +15,7 @@ defmodule RinhaBackend.Application do
 
     children = [
       RinhaBackend.Repo,
+      RinhaBackend.ReadRepo,
       {Plug.Cowboy, scheme: :http, plug: RinhaBackend.Router, options: [port: 4001]}
     ]
 
