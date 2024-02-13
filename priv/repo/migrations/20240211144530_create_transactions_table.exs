@@ -11,6 +11,6 @@ defmodule RinhaBackend.Repo.Migrations.CreateTransactionsTable do
       timestamps(type: :naive_datetime_usec, updated_at: false)
     end
 
-    create(index(:transactions, :client_id))
+    create(index(:transactions, [:client_id, :inserted_at]))
   end
 end
