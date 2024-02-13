@@ -12,7 +12,7 @@ defmodule RinhaBackend.Repo.Migrations.CreateFnProcessTransaction do
         transaction_value := CASE WHEN transaction_type = 'c' THEN value ELSE value * -1 END;
 
         INSERT INTO public.transactions (client_id, value, "type", description, inserted_at)
-        VALUES (client_id, transaction_value, transaction_type, description, now());
+        VALUES (client_id, value, transaction_type, description, now());
 
         WITH updated_balance AS (
           UPDATE public.clients

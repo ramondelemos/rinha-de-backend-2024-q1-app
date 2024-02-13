@@ -10,7 +10,7 @@ defmodule RinhaBackend.Commands.ProcessTransactionTest do
   alias RinhaBackend.Models.Transaction
 
   describe "execute/1" do
-    test "should process transaction with success when executend with a valid transaction" do
+    test "should process transaction with success when executend with a valid credit transaction" do
       %Client{balance: balance, credit_limit: limit} = Repo.get(Client, 1)
 
       description = UUID.generate()
@@ -27,6 +27,28 @@ defmodule RinhaBackend.Commands.ProcessTransactionTest do
       assert %Transaction{
                client_id: 1,
                type: "c",
+               value: 1,
+               description: ^description
+             } = Repo.get_by(Transaction, description: description)
+    end
+
+    test "should process transaction with success when executend with a valid debit transaction" do
+      %Client{balance: balance, credit_limit: limit} = Repo.get(Client, 1)
+
+      description = UUID.generate()
+
+      transaction = %Transaction{
+        client_id: 1,
+        type: "d",
+        value: 1,
+        description: description
+      }
+
+      assert ProcessTransaction.execute(transaction) == {:ok, {balance - 1, limit}}
+
+      assert %Transaction{
+               client_id: 1,
+               type: "d",
                value: 1,
                description: ^description
              } = Repo.get_by(Transaction, description: description)
