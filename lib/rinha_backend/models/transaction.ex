@@ -43,32 +43,27 @@ defmodule RinhaBackend.Models.Transaction do
         {:ok, Ecto.Changeset.apply_changes(changes)}
 
       %Ecto.Changeset{
-        errors: [client_id: {"is invalid", [type: :integer, validation: :cast]}]
+        errors: [client_id: _]
       } ->
         {:error, "invalid client id"}
 
       %Ecto.Changeset{
-        errors: [
-          value:
-            {"must be greater than or equal to %{number}",
-             [validation: :number, kind: :greater_than_or_equal_to, number: number]}
-        ]
+        errors: [value: _]
       } ->
-        {:error, "value must be greater than or equal to #{number}"}
+        {:error, "invalid value"}
 
       %Ecto.Changeset{
-        errors: [description: {"can't be blank", [validation: :required]}]
+        errors: [description: _]
       } ->
-        {:error, "description can't be blank"}
+        {:error, "invalid description"}
 
       %Ecto.Changeset{
-        errors: [
-          description:
-            {"should be at most %{count} character(s)",
-             [count: 10, validation: :length, kind: :max, type: :string]}
-        ]
+        errors: [type: _]
       } ->
-        {:error, "description should be at most 10 characters"}
+        {:error, "invalid type"}
+
+      _ ->
+        {:error, "invalid params"}
     end
   end
 

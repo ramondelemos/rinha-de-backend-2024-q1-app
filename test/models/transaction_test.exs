@@ -48,25 +48,25 @@ defmodule RinhaBackend.Models.TransactionTest do
     test "should return a invalid changeset when value is less then 1" do
       assert @valid_params
              |> Map.replace("value", -1)
-             |> Transaction.from_map() == {:error, "value must be greater than or equal to 1"}
+             |> Transaction.from_map() == {:error, "invalid value"}
     end
 
     test "should return a invalid changeset when description is blank" do
       assert @valid_params
              |> Map.replace("description", nil)
-             |> Transaction.from_map() == {:error, "description can't be blank"}
+             |> Transaction.from_map() == {:error, "invalid description"}
     end
 
     test "should return a invalid changeset when description is an empty string" do
       assert @valid_params
              |> Map.replace("description", "")
-             |> Transaction.from_map() == {:error, "description can't be blank"}
+             |> Transaction.from_map() == {:error, "invalid description"}
     end
 
     test "should return a invalid changeset when description length is greater than 10" do
       assert @valid_params
              |> Map.replace("description", "description")
-             |> Transaction.from_map() == {:error, "description should be at most 10 characters"}
+             |> Transaction.from_map() == {:error, "invalid description"}
     end
   end
 end
