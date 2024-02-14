@@ -32,5 +32,6 @@ config :rinha_backend, RinhaBackend.ReadRepo,
 config :rinha_backend, RinhaBackend.Commands.GenerateStatement, repo: RinhaBackend.ReadRepo
 
 config :rinha_backend, :back_pressure,
+  enabled: get_boolean.("BACK_PRESSURE_ENABLED"),
   timeout: fetch_integer!.("BACK_PRESSURE_TIMEOUT"),
   max_demand: fetch_integer!.("BACK_PRESSURE_MAX_CONCURRENCY")

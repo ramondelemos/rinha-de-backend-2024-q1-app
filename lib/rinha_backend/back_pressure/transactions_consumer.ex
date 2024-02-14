@@ -108,13 +108,13 @@ defmodule RinhaBackend.BackPressure.TransactionsConsumer do
 
   defp get_max_demand do
     :rinha_backend
-    |> Application.get_env(:back_pressure)
-    |> Keyword.get(:max_demand, 150)
+    |> Application.fetch_env!(:back_pressure)
+    |> Keyword.fetch!(:max_demand)
   end
 
   defp get_timeout do
     :rinha_backend
-    |> Application.get_env(:back_pressure)
-    |> Keyword.get(:timeout, 1000)
+    |> Application.fetch_env!(:back_pressure)
+    |> Keyword.fetch!(:timeout)
   end
 end

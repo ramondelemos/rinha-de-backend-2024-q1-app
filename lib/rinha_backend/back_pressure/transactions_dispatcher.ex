@@ -31,7 +31,7 @@ defmodule RinhaBackend.BackPressure.TransactionsDispatcher do
 
   defp get_timeout do
     :rinha_backend
-    |> Application.get_env(:back_pressure)
-    |> Keyword.get(:timeout, 30_100)
+    |> Application.fetch_env!(:back_pressure)
+    |> Keyword.fetch!(:timeout)
   end
 end

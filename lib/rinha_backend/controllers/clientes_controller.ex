@@ -3,7 +3,11 @@ defmodule RinhaBackend.Controllers.ClientsController do
 
   alias RinhaBackend.BackPressure.TransactionsDispatcher
   alias RinhaBackend.ClientsCache
-  alias RinhaBackend.Commands.GenerateStatement
+
+  alias RinhaBackend.Commands.{
+    GenerateStatement,
+    ProcessTransaction
+  }
 
   alias RinhaBackend.Models.{
     Client,
@@ -58,12 +62,25 @@ defmodule RinhaBackend.Controllers.ClientsController do
         {:error, :client_not_found}
 
       %Client{} ->
-        dispatch_transaction(transaction)
+        dispatch_transaction(transaction, back_pressure_enabled?())
     end
   end
 
-  defp dispatch_transaction(transaction) do
+  defp dispatch_transaction(transaction, true) do
     case TransactionsDispatcher.dispatch(transaction) do
+      {:ok, {balance, limit}} ->
+        Jason.encode(%{"saldo" => balance, "limite" => limit})
+
+      {:error, :client_not_found} ->
+        {:error, :not_found}
+
+      error ->
+        error
+    end
+  end
+
+  defp dispatch_transaction(transaction, false) do
+    case ProcessTransaction.execute(transaction) do
       {:ok, {balance, limit}} ->
         Jason.encode(%{"saldo" => balance, "limite" => limit})
 
@@ -110,5 +127,11 @@ defmodule RinhaBackend.Controllers.ClientsController do
       "descricao" => description,
       "realizada_em" => realizada_em
     }
+  end
+
+  defp back_pressure_enabled? do
+    :rinha_backend
+    |> Application.fetch_env!(:back_pressure)
+    |> Keyword.fetch!(:enabled)
   end
 end
