@@ -13,3 +13,8 @@ docker-image:
 		--tag ramondelemos/rinha_backend:latest \
 		-f Dockerfile \
 		.
+
+.PHONY: deploy-docker-hub
+deploy-docker-hub: docker-image
+	docker login -u "$(DOCKER_USER)" -p "$(DOCKER_PASS)"
+	docker push ramondelemos/rinha_backend:latest
