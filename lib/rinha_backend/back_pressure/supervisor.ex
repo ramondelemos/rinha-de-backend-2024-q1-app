@@ -12,8 +12,6 @@ defmodule RinhaBackend.BackPressure.Supervisor do
   end
 
   def init(:ok) do
-    :ets.new(:client_producers, [:public, :named_table])
-
     DynamicSupervisor.init(strategy: :one_for_one)
   end
 

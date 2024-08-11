@@ -7,8 +7,8 @@ defmodule RinhaBackend.BackPressure.TransactionsProducer do
 
   require Logger
 
-  @timeout :timer.minutes(5)
-  @work_interval :timer.minutes(1)
+  @timeout :timer.minutes(1)
+  @work_interval :timer.seconds(10)
 
   #############################
   # Client (Public) Interface #
@@ -18,9 +18,18 @@ defmodule RinhaBackend.BackPressure.TransactionsProducer do
   Spawns a new processor registered under the given `client_id`.
   """
   def start_link(client_id) do
+    Logger.info("Starting back pressure to client_account [#{inspect(client_id)}]",
+      client_id: inspect(client_id)
+    )
+
+    state = %{
+      client_id: client_id,
+      updated_at: NaiveDateTime.utc_now()
+    }
+
     GenStage.start_link(
       __MODULE__,
-      client_id,
+      state,
       name: via_tuple(client_id)
     )
   end
@@ -59,8 +68,7 @@ defmodule RinhaBackend.BackPressure.TransactionsProducer do
   # Server Callbacks #
   ####################
 
-  def init(client_id = state) do
-    update(client_id)
+  def init(state) do
     schedule_work()
     {:producer, state}
   end
@@ -70,20 +78,22 @@ defmodule RinhaBackend.BackPressure.TransactionsProducer do
   end
 
   # Adding demand to consumers
-  def handle_cast({:enqueue, process_owner, transaction}, client_id = state) do
-    update(client_id)
-    enqueue_demand(process_owner, transaction, state)
-  end
+  def handle_cast({:enqueue, process_owner, transaction}, %{client_id: client_id}) do
+    now = NaiveDateTime.utc_now()
 
-  def enqueue_demand(process_owner, transaction, state) do
-    {:noreply, [{process_owner, transaction, NaiveDateTime.utc_now()}], state}
+    state = %{
+      client_id: client_id,
+      updated_at: now
+    }
+
+    {:noreply, [{process_owner, transaction, now}], state}
   end
 
   # Ignore any demand from consumers
   def handle_demand(_, state), do: {:noreply, [], state}
 
-  def handle_info(:work, client_id = state) do
-    if idle?(client_id) do
+  def handle_info(:work, state) do
+    if idle?(state) do
       send(self(), :timeout)
     else
       schedule_work()
@@ -92,11 +102,19 @@ defmodule RinhaBackend.BackPressure.TransactionsProducer do
     {:noreply, [], state}
   end
 
-  def handle_info(:timeout, state) do
+  def handle_info(:timeout, %{client_id: client_id} = state) do
+    Logger.info("Back pressure to client_account [#{inspect(client_id)}] timed out",
+      client_id: inspect(client_id)
+    )
+
     {:stop, {:shutdown, :timeout}, state}
   end
 
-  def terminate({:shutdown, :timeout}, _state) do
+  def terminate({:shutdown, :timeout}, %{client_id: client_id}) do
+    Logger.info("Terminating back pressure to client_account [#{inspect(client_id)}] by time out",
+      client_id: inspect(client_id)
+    )
+
     :ok
   end
 
@@ -108,22 +126,7 @@ defmodule RinhaBackend.BackPressure.TransactionsProducer do
     Process.send_after(self(), :work, @work_interval)
   end
 
-  defp idle?(client_id) do
-    case :ets.lookup(:client_producers, client_id) do
-      [] ->
-        true
-
-      [{^client_id, %{updated_at: updated_at}}] ->
-        NaiveDateTime.diff(NaiveDateTime.utc_now(), updated_at, :millisecond) > @timeout
-    end
-  end
-
-  defp update(client_id) do
-    state = %{
-      client_id: client_id,
-      updated_at: NaiveDateTime.utc_now()
-    }
-
-    :ets.insert(:client_producers, {client_id, state})
+  defp idle?(%{updated_at: updated_at}) do
+    NaiveDateTime.diff(NaiveDateTime.utc_now(), updated_at, :millisecond) > @timeout
   end
 end
