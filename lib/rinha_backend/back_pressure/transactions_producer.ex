@@ -18,10 +18,6 @@ defmodule RinhaBackend.BackPressure.TransactionsProducer do
   Spawns a new processor registered under the given `client_id`.
   """
   def start_link(client_id) do
-    Logger.info("Starting back pressure to client_account [#{inspect(client_id)}]",
-      client_id: inspect(client_id)
-    )
-
     state = %{
       client_id: client_id,
       updated_at: NaiveDateTime.utc_now()
@@ -69,6 +65,9 @@ defmodule RinhaBackend.BackPressure.TransactionsProducer do
   ####################
 
   def init(state) do
+    Logger.debug("Starting back pressure to client_account [#{inspect(state.client_id)}]",
+      client_id: inspect(state.client_id)
+    )
     schedule_work()
     {:producer, state}
   end
@@ -103,7 +102,7 @@ defmodule RinhaBackend.BackPressure.TransactionsProducer do
   end
 
   def handle_info(:timeout, %{client_id: client_id} = state) do
-    Logger.info("Back pressure to client_account [#{inspect(client_id)}] timed out",
+    Logger.debug("Back pressure to client_account [#{inspect(client_id)}] timed out",
       client_id: inspect(client_id)
     )
 
@@ -111,7 +110,7 @@ defmodule RinhaBackend.BackPressure.TransactionsProducer do
   end
 
   def terminate({:shutdown, :timeout}, %{client_id: client_id}) do
-    Logger.info("Terminating back pressure to client_account [#{inspect(client_id)}] by time out",
+    Logger.debug("Terminating back pressure to client_account [#{inspect(client_id)}] by time out",
       client_id: inspect(client_id)
     )
 

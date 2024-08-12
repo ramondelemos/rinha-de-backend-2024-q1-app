@@ -9,7 +9,7 @@ defmodule RinhaBackend.BackPressure.TransactionsDispatcher do
   def dispatch(%Transaction{client_id: client_id} = transaction) do
     timeout = get_timeout()
 
-    with {:ok, pid} <- Supervisor.start_producer(client_id),
+    with {:ok, pid} <- Supervisor.start_producer({client_id, :liability}),
          :ok <- TransactionsProducer.enqueue(pid, self(), transaction) do
       receive do
         {:done, response} ->

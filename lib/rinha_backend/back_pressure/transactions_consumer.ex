@@ -3,11 +3,10 @@ defmodule RinhaBackend.BackPressure.TransactionsConsumer do
   A GenStage that processes demand of client transactions.
   """
 
-  use GenStage
+  use ConsumerSupervisor
 
   alias RinhaBackend.BackPressure.TransactionsProducer
-  alias RinhaBackend.Commands.ProcessTransaction
-  alias RinhaBackend.Models.Transaction
+  alias RinhaBackend.BackPressure.TransactionExecutor
 
   require Logger
 
@@ -16,7 +15,7 @@ defmodule RinhaBackend.BackPressure.TransactionsConsumer do
   #############################
 
   def start_link(client_id) do
-    GenStage.start_link(__MODULE__, client_id, name: via_tuple(client_id))
+    ConsumerSupervisor.start_link(__MODULE__, client_id, name: via_tuple(client_id))
   end
 
   ####################
@@ -24,17 +23,24 @@ defmodule RinhaBackend.BackPressure.TransactionsConsumer do
   ####################
 
   def init(client_id) do
-    {
-      :consumer,
-      client_id,
-      subscribe_to: [
-        {TransactionsProducer.via_tuple(client_id), max_demand: get_max_demand()}
-      ]
-    }
-  end
+    Logger.debug("Back pressure consumer to client_account [#{inspect(client_id)}] started",
+      client_id: inspect(client_id)
+    )
 
-  def handle_events(events, from, state) do
-    process_events(events, from, state)
+    children = [
+      %{
+        id: TransactionExecutor,
+        start: {TransactionExecutor, :start_link, []},
+        restart: :transient
+      }
+    ]
+
+    opts = [
+      strategy: :one_for_one,
+      subscribe_to: [{TransactionsProducer.via_tuple(client_id), max_demand: get_max_demand()}]
+    ]
+
+    ConsumerSupervisor.init(children, opts)
   end
 
   def handle_info(:timeout, state) do
@@ -69,52 +75,9 @@ defmodule RinhaBackend.BackPressure.TransactionsConsumer do
     |> GenServer.whereis()
   end
 
-  def process_events(events, _from, state) when length(events) > 0 do
-    events
-    |> Enum.map(fn {process_owner, transaction, published_at} ->
-      Task.async(fn ->
-        execute(process_owner, transaction, published_at)
-      end)
-    end)
-    |> Task.await_many(7_000)
-
-    # As a consumer we never emit events
-    {:noreply, [], state}
-  end
-
-  def process_events(_events, _from, state), do: {:noreply, [], state}
-
-  defp execute(process_owner, transaction, published_at) do
-    waiting_time = NaiveDateTime.diff(NaiveDateTime.utc_now(), published_at, :millisecond)
-
-    if waiting_time > get_timeout() do
-      Logger.debug("transaction droped")
-    else
-      response = do_execute(transaction)
-      send(process_owner, {:done, response})
-      Logger.debug("transaction executed")
-    end
-  rescue
-    exception ->
-      fail = %{
-        reason: Exception.message(exception),
-        stack: __STACKTRACE__
-      }
-
-      send(process_owner, {:rescue, fail})
-  end
-
-  defp do_execute(%Transaction{} = transaction), do: ProcessTransaction.execute(transaction)
-
   defp get_max_demand do
     :rinha_backend
     |> Application.fetch_env!(:back_pressure)
     |> Keyword.fetch!(:max_demand)
-  end
-
-  defp get_timeout do
-    :rinha_backend
-    |> Application.fetch_env!(:back_pressure)
-    |> Keyword.fetch!(:timeout)
   end
 end
